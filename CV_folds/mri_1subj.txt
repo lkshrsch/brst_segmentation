@@ -1,0 +1,1 @@
+/home/hirsch/Documents/projects/MSKCC/FINAL_TRAIN_DATA/Normalized/rMSKCC_16-328_1_06596_20040129_T1_post_rsc_stand_stand.nii

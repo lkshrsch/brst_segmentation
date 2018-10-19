@@ -1,0 +1,10 @@
+/home/hirsch/Documents/projects/MSKCC/FINAL_TRAIN_DATA/LABELS/rMSKCC_16-328_1_12660_20081204_label.nii
+/home/hirsch/Documents/projects/MSKCC/FINAL_TRAIN_DATA/LABELS/rMSKCC_16-328_1_05800_20110420_label.nii
+/home/hirsch/Documents/projects/MSKCC/FINAL_TRAIN_DATA/LABELS/rMSKCC_16-328_1_06121_20091013_label.nii
+/home/hirsch/Documents/projects/MSKCC/FINAL_TRAIN_DATA/LABELS/rMSKCC_16-328_1_14573_20100823_label.nii
+/home/hirsch/Documents/projects/MSKCC/FINAL_TRAIN_DATA/LABELS/rMSKCC_16-328_1_11660_20080130_label.nii
+/home/hirsch/Documents/projects/MSKCC/FINAL_TRAIN_DATA/LABELS/rMSKCC_16-328_1_10006_20061003_label.nii
+/home/hirsch/Documents/projects/MSKCC/FINAL_TRAIN_DATA/LABELS/rMSKCC_16-328_1_04382_20070530_label.nii
+/home/hirsch/Documents/projects/MSKCC/FINAL_TRAIN_DATA/LABELS/rMSKCC_16-328_1_07437_20040902_label.nii
+/home/hirsch/Documents/projects/MSKCC/FINAL_TRAIN_DATA/LABELS/rMSKCC_16-328_1_06761_20090108_label.nii
+/home/hirsch/Documents/projects/MSKCC/FINAL_TRAIN_DATA/LABELS/rMSKCC_16-328_1_13605_20090825_label.nii
