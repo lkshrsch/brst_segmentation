@@ -89,34 +89,40 @@ def generateVoxelIndexes(subjectIndexes, shapes, patches_per_subject, dpatch, n_
               
         
         for i in range(0,len(channels)): 
+            
             voxelIndexesSubj = []
             backgroundVoxels = [] 
-            sagittal_background_slices = []     
+            #sagittal_background_slices = []     
             assert len(channels) == len(shapes)
             #print('\n Getting foreground Voxels from {} \n with shape {}'.format(channels[i], shapes[i]))
             fg = getForegroundBackgroundVoxels(channels[i], dpatch) # This function returns only foreground voxels
       
             if len(fg) > 0:
         		#print("Extracting foreground voxels " + str(patches_per_subject[i]/2 + patches_per_subject[i]%2) +' from ' + str(len(fg)) + " from channel " + str(channels[i]) + " with index " + str(i))
-        		foregroundVoxels = fg[random.sample(xrange(0,len(fg)), min(len(fg),patches_per_subject[i]/2 + patches_per_subject[i]%2))].tolist()            
-        
+              
+                # Half of patches are foreground (standard method)
+              #foregroundVoxels = fg[random.sample(xrange(0,len(fg)), min(len(fg),patches_per_subject[i]/2 + patches_per_subject[i]%2))].tolist()       
+                # All patches are foreground.
+              foregroundVoxels = fg[random.sample(xrange(0,len(fg)), min(len(fg),patches_per_subject[i]))].tolist()       
         		# Images oriented to RAS have tumor on sagittal (first axis)            
         		#create a window 0f -5:+5 around foreground voxels from which no background voxels can be sampled... This is to avoid mislabels on tumor. 
-        		try: sagittal_background_slices = range(foregroundVoxels[0][0] - 5) + range(foregroundVoxels[0][0] + 5, shapes[i][0]-5)
-        		except: 
-        		    print('\n Could not get background slices from tumor slice {}'.format(foregroundVoxels[0][0] ))
-        		    break
+        		#try: sagittal_background_slices = range(foregroundVoxels[0][0] - 5) + range(foregroundVoxels[0][0] + 5, shapes[i][0]-5)
+        		#except: 
+        		#    print('\n Could not get background slices from tumor slice {}'.format(foregroundVoxels[0][0] ))
+        		#    break
             
             elif len(fg) == 0:
-        		#print('\nNo foreground voxels found! Channel: {}\n'.format(channels[i]))
-        		foregroundVoxels = []
-			sagittal_background_slices = range(4, shapes[i][0]-5)
-        		for j in range(0,min(len(fg),patches_per_subject[i]/2 + patches_per_subject[i]%2)):
-        		    foregroundVoxels.append((np.random.randint(4, shapes[i][0]-5) , np.random.randint(4, shapes[i][1]-5) , np.random.randint(4, shapes[i][2]-5) ))   
+              #print('No foreground voxels found! Channel: {}'.format(channels[i]))
+              foregroundVoxels = []
+              for j in range(0,patches_per_subject[i]):
+                foregroundVoxels.append((np.random.randint(4, shapes[i][0]-5) , np.random.randint(4, shapes[i][1]-5) , np.random.randint(4, shapes[i][2]-5) ))   
+              #sagittal_background_slices = range(4, shapes[i][0]-5)
+              #for j in range(0,min(len(fg),patches_per_subject[i]/2 + patches_per_subject[i]%2)):
 
 
-            for j in range(0,patches_per_subject[i]/2):
-                backgroundVoxels.append((random.choice(sagittal_background_slices),np.random.randint(4, shapes[i][1]-5),np.random.randint(4, shapes[i][2]-5)))               
+
+            #for j in range(0,patches_per_subject[i]/2):
+            #    backgroundVoxels.append((random.choice(sagittal_background_slices),np.random.randint(4, shapes[i][1]-5),np.random.randint(4, shapes[i][2]-5)))               
             #Replace the ones that by chance are foreground voxels (not so many in tumor data)
 
             while any([e for e in foregroundVoxels if e in backgroundVoxels]):
@@ -192,7 +198,7 @@ def extractLabels(groundTruthChannel_list, subjectIndexes, voxelCoordinates, dpa
             for j in xrange(0,len(voxelCoordinates[i])):     
                 D1,D2,D3 = voxelCoordinates[i][j]
                 #print('Extracting labels from \n subject {} with shape {} and coords {},{},{}'.format(subjects[i], label_data.shape ,D1,D2,D3))
-                labels.append(label_data[D1,D2-4:D2+5,D3-4:D3+5])    # changed for breast data with sagittal 2D labels
+                labels.append(label_data[D1,D2-4:D2+5,D3-4:D3+5])    # changed for breast data with sagittal 2D labels     
             proxy_label.uncache()
             del label_data
         return labels
@@ -203,12 +209,65 @@ def extractLabels(groundTruthChannel_list, subjectIndexes, voxelCoordinates, dpa
         for i in xrange(0,len(voxelCoordinates[0])):
             D1,D2,D3 = voxelCoordinates[0][i]
             labels.append(label_data[D1,D2-4:D2+5,D3-4:D3+5])  # changed for breast data with sagittal 2D labels
-            #coords = np.array([D1,range(D2-4,D2+5),range(D3-4,D3+5)
-            
             #print("Extracted labels " + str(i))
         proxy_label.uncache()
         del label_data
         return labels
+    
+    
+def extractCoordinates(channel, subjectIndexes, voxelCoordinates):
+    print('extracting coordinates from ' + str(len(subjectIndexes))+ ' subjects.')
+    subjects = getSubjectsToSample(channel, subjectIndexes)
+    all_coordinates = []
+    if (len(subjectIndexes) > 1):
+        for i in xrange(0,len(voxelCoordinates)):
+            subject = str(subjects[i])[:-1]
+            img = nib.load(subject)
+            for j in xrange(0,len(voxelCoordinates[i])):     
+                D1,D2,D3 = voxelCoordinates[i][j]
+                all_coordinates.append(get_Coordinates_from_target_patch(img.shape,D1,D2,D3))                    
+            img.uncache()
+        return np.array(all_coordinates)
+    elif(len(subjectIndexes) == 1):
+        subject = str(subjects[0])[:-1]
+        img = nib.load(subject)
+        for i in xrange(0,len(voxelCoordinates[0])):
+            D1,D2,D3 = voxelCoordinates[0][i]
+            all_coordinates.append(get_Coordinates_from_target_patch(img.shape,D1,D2,D3))
+        img.uncache()
+        return np.array(all_coordinates)
+       
+def get_Coordinates_from_target_patch(img_shape,D1,D2,D3) :
+    dpatch = [1,9,9]
+    x = []
+    y = []
+    z = []    
+    
+    X = [D1]*dpatch[0]*dpatch[1]*dpatch[2]
+    x = np.array(X)
+    x = x.reshape(dpatch[1],dpatch[2])
+    
+    Y = range(D2-(dpatch[1]//2),D2+((dpatch[1]//2)+1))
+    for i in range(dpatch[1]):
+      y.append(Y)
+    y = np.transpose(y)
+    
+    
+    Z = range(D3-(dpatch[2]//2),D3+((dpatch[2]//2)+1))
+    for i in range(dpatch[2]):
+     z.append(Z)
+    z = np.array(z)
+    
+    coords = np.array([x,y,z])
+    # Vectorized version:
+    #dpatch = [1,9,9]
+    #coords = []
+    #for i in range(dpatch[1]):
+    #    j = i - dpatch[1]//2
+        # Get the row by mltiplying the row-coordinate * column-length, then adding the column-coordinate. Loop over row-coordinates to get all rows.
+        # Get the correct slice by adding every coordinate + dim2*dim3 times the 'selected slice' = D1.
+    #    coords.append((np.array(range((D2+j)*img_shape[2] + D3-(dpatch[1]//2) , (D2+j)*img_shape[2] + (D3+(dpatch[1]//2)+1)),dtype='float64') + float(D1*img_shape[1]*img_shape[2]))*1e-4)
+    return np.array(coords)  
     
        
 def get_patches_per_subject( n_patches, n_subjects):
@@ -225,6 +284,7 @@ def extractImagePatch(channel, subjectIndexes, patches, voxelCoordinates, dpatch
     myFlag = False
     for i in range(len(voxelCoordinates)):
         n_patches += len(voxelCoordinates[i])
+    print('Starting extraction of {} patches from {} subjects.'.format(n_patches,len(voxelCoordinates)))
     vol = np.ones((n_patches,dpatch[0],dpatch[1],dpatch[2]),dtype='float32')
     k = 0
     if (len(subjectIndexes) > 1):
@@ -232,9 +292,9 @@ def extractImagePatch(channel, subjectIndexes, patches, voxelCoordinates, dpatch
 
 	# Loop over subjects
         for i in xrange(0,len(voxelCoordinates)):
-	    #print('Extracting {} image patches for subject with index [{}]'.format(len(voxelCoordinates[i]),subjectIndexes[i]))    
+            print('Extracting {} image patches for subject with index [{}] and channel {}'.format(len(voxelCoordinates[i]),subjectIndexes[i],str(subjects[i])[:-1]))    
             subject = str(subjects[i])[:-1]
-	    #print('Subject with path: {}'.format(subject))
+            #print('Subject with path: {}'.format(subject))
             proxy_img = nib.load(subject)            
             img_data = np.array(proxy_img.get_data(),dtype='float32')
 
@@ -338,9 +398,9 @@ def sampleTrainData(trainChannels, trainLabels, n_patches, n_subjects, dpatch, o
     print('Extracting patches from subjects index: {}'.format(subjectIndexes))
     shapes = getSubjectShapes(subjectIndexes, n_patches, trainLabels)
     voxelCoordinates = generateVoxelIndexes(subjectIndexes, shapes, patches_per_subject, dpatch, n_patches, trainLabels, samplingMethod, output_classes)    
-    print('Sampling Training Data: \n With {} patches'.format(len(voxelCoordinates)))
-    print(voxelCoordinates)
-    print(subjectIndexes)
+    #print('Sampling Training Data: \n With {} patches'.format(len(voxelCoordinates)))
+    #print(voxelCoordinates)
+    #print(subjectIndexes)
     # Get real number of patches to sample (as counted by the voxelCoordinates extracted, which is <= n_patches, as some classes are sparse)
     real_n_patches = 0
     for i in range(len(voxelCoordinates)):
@@ -352,9 +412,10 @@ def sampleTrainData(trainChannels, trainLabels, n_patches, n_subjects, dpatch, o
     labels = np.array(to_categorical(labels.astype(int),output_classes),dtype='int8')
     if(samplingMethod == 2):
         patches = patches[0:len(labels)]  # when using equal sampling (samplingMethod 2), because some classes have very few voxels in a head, there are fewer patches as intended. Patches is initialized as the maximamum value, so needs to get cut to match labels.
+    all_coordinates = extractCoordinates(trainChannels[0], subjectIndexes, voxelCoordinates)
     end = time.time()
     my_logger("Finished extracting " + str(real_n_patches) + " patches, from "  + str(n_subjects) + " subjects and " + str(num_channels) + " channels. Timing: " + str(round(end-start,2)) + "s", logfile)
-    return patches, labels
+    return patches, labels, all_coordinates
     
     
 def generateAllForegroundVoxels(groundTruthChannel_list, dpatch):
@@ -649,8 +710,9 @@ def sampleTestData(testChannels, testLabels, subjectIndex, output_classes, dpatc
                 for z in range(4,zend,9):
                     voxelCoordinates.append([x,y,z])
         labels = []
+        all_coordinates = extractCoordinates(testLabels, subjectIndex, [voxelCoordinates])
         #print("Finished extracting " + str(n_patches) + " patches, from "  + str(n_subjects) + " subjects and " + str(num_channels) + " channels. Timing: " + str(round(end-start,2)) + "s")
-        return labels, voxelCoordinates, shape, affine
+        return labels, voxelCoordinates, all_coordinates, shape, affine
         
     else:
 
@@ -673,9 +735,10 @@ def sampleTestData(testChannels, testLabels, subjectIndex, output_classes, dpatc
                 for z in range(4,zend,9):
                     voxelCoordinates.append([x,y,z])        
         labels = np.array(extractLabels(testLabels, subjectIndex, [voxelCoordinates], dpatch))
+        all_coordinates = extractCoordinates(testLabels, subjectIndex, [voxelCoordinates])
         labels = to_categorical(labels.astype(int),output_classes)
         #print("Finished extracting " + str(n_patches) + " patches, from "  + str(n_subjects) + " subjects and " + str(num_channels) + " channels. Timing: " + str(round(end-start,2)) + "s")
-        return labels, voxelCoordinates, shape, affine
+        return labels, voxelCoordinates, all_coordinates, shape, affine
         
 def generalized_dice_completeImages(img1,img2):
     assert img1.shape == img2.shape, 'Images of different size!'
@@ -704,7 +767,7 @@ def fullHeadSegmentation(wd, penalty_MATRIX, dice_compare, dsc, model, testChann
     shape = proxy_img.shape
     affine = proxy_img.affine
     
-    labels, voxelCoordinates, shape, affine = sampleTestData(testChannels, testLabels, subjectIndex, output_classes, dpatch,logfile)
+    labels, voxelCoordinates, all_coordinates, shape, affine = sampleTestData(testChannels, testLabels, subjectIndex, output_classes, dpatch,logfile)
     print("Extracted image patches for full head segmentation")
         
     if full_evaluation == False:
@@ -721,9 +784,16 @@ def fullHeadSegmentation(wd, penalty_MATRIX, dice_compare, dsc, model, testChann
             minibatch_voxelCoordinates = voxelCoordinates[start:end]
             for i in xrange(0,len(testChannels)):
                 patches[:,:,:,:,i] = extractImagePatch(testChannels[i], subjectIndex, patches, [minibatch_voxelCoordinates], dpatch, debug=False)
-                                             
-            prediction = model.predict([patches], verbose=0)
-            print(prediction[:,:,:,:,1])
+            minibatch_coords = all_coordinates[start:end,:,:]
+            minibatch_coords = np.reshape(minibatch_coords,(minibatch_coords.shape[0],3,9,9,1))
+            minibatch_coords_X = minibatch_coords[:,0,:,:,:]
+            minibatch_coords_Y = minibatch_coords[:,1,:,:,:]
+            minibatch_coords_Z = minibatch_coords[:,2,:,:,:]
+            minibatch_coords_X = np.reshape(minibatch_coords_X,(minibatch_coords_X.shape[0],1,9,9,1))
+            minibatch_coords_Y = np.reshape(minibatch_coords_X,(minibatch_coords_Y.shape[0],1,9,9,1))
+            minibatch_coords_Z = np.reshape(minibatch_coords_X,(minibatch_coords_Z.shape[0],1,9,9,1))
+            prediction = model.predict([patches,minibatch_coords_X,minibatch_coords_Y,minibatch_coords_Z], verbose=0)
+            #print(prediction[:,:,:,:,1])
             class_pred = prediction[:,:,:,:,1]            # Just output the probability maps for Tumor.
             #class_pred = np.argmax(prediction, axis=4)
             indexes.extend(class_pred)        
@@ -736,8 +806,15 @@ def fullHeadSegmentation(wd, penalty_MATRIX, dice_compare, dsc, model, testChann
         minibatch_voxelCoordinates = voxelCoordinates[start:end]
         for i in xrange(0,len(testChannels)):
             patches[:,:,:,:,i] = extractImagePatch(testChannels[i], subjectIndex, patches, [minibatch_voxelCoordinates], dpatch, debug=False)
-                    
-        prediction = model.predict([patches], verbose=0) 
+        minibatch_coords = all_coordinates[start:end,:,:]            
+        minibatch_coords = np.reshape(minibatch_coords,(minibatch_coords.shape[0],3,9,9,1))
+        minibatch_coords_X = minibatch_coords[:,0,:,:,:]
+        minibatch_coords_Y = minibatch_coords[:,1,:,:,:]
+        minibatch_coords_Z = minibatch_coords[:,2,:,:,:]
+        minibatch_coords_X = np.reshape(minibatch_coords_X,(minibatch_coords_X.shape[0],1,9,9,1))
+        minibatch_coords_Y = np.reshape(minibatch_coords_X,(minibatch_coords_Y.shape[0],1,9,9,1))
+        minibatch_coords_Z = np.reshape(minibatch_coords_X,(minibatch_coords_Z.shape[0],1,9,9,1))
+        prediction = model.predict([patches,minibatch_coords_X,minibatch_coords_Y,minibatch_coords_Z], verbose=0)
         class_pred = prediction[:,:,:,:,1]  
         #class_pred = np.argmax(prediction, axis=4)
         indexes.extend(class_pred)     
@@ -755,13 +832,24 @@ def fullHeadSegmentation(wd, penalty_MATRIX, dice_compare, dsc, model, testChann
             labelsFile = open(testLabels,"r")   
             ch = labelsFile.readlines()
             subjectGTchannel = ch[subjectIndex[0]][:-1]
-            GT = nib.load(subjectGTchannel)  
-            score = weighted_generalized_dice_completeImages(GT.get_data(), img.get_data(), penalty_MATRIX)
-            #score = generalized_dice_completeImages(img.get_data(), GT.get_data())
-            dsc.append(score[0])
-            print(dsc[-1])
-            print('per class dice score: {}'.format(score[1]))
-            print('mean DCS so far:' + str(np.mean(dsc)))
+            GT = nib.load(subjectGTchannel)
+            if img.shape != GT.shape:
+              print('Images of different size! \n{}, \n{}'.format(subjectGTchannel,testChannels[i]))
+              if np.sum(GT) == 0:
+                GT = np.zeros(shape=img.shape)
+                score = weighted_generalized_dice_completeImages(GT.get_data(), img.get_data(), penalty_MATRIX)
+                #score = generalized_dice_completeImages(img.get_data(), GT.get_data())
+                dsc.append(score[0])
+                print(dsc[-1])
+                print('per class dice score: {}'.format(score[1]))
+                print('mean DCS so far:' + str(np.mean(dsc)))
+            else:  
+              score = weighted_generalized_dice_completeImages(GT.get_data(), img.get_data(), penalty_MATRIX)
+              #score = generalized_dice_completeImages(img.get_data(), GT.get_data())
+              dsc.append(score[0])
+              print(dsc[-1])
+              print('per class dice score: {}'.format(score[1]))
+              print('mean DCS so far:' + str(np.mean(dsc)))
             
         if(saveSegmentation):
             segmentationName = '/predictions/' + subID + str(epoch)
@@ -1014,7 +1102,7 @@ def classesInSample(minibatch_labels, output_classes):
 	#return label_numbers
 	return np.sum(minibatch_labels, axis=4)
 
-def train_model_on_batch(model,batch,labels,size_minibatches,history,losses,metrics,l,logfile, output_classes):
+def train_model_on_batch(model,batch,labels,coords,size_minibatches,history,losses,metrics,l,logfile, output_classes):
     start = 0
     n_minibatches = len(batch)/size_minibatches
     for j in range(0,n_minibatches):
@@ -1023,13 +1111,21 @@ def train_model_on_batch(model,batch,labels,size_minibatches,history,losses,metr
         minibatch = batch[start:end,:,:,:,:]    
         minibatch_labels = labels[start:end,:,:,:]   
         minibatch_labels = np.reshape(minibatch_labels,(minibatch_labels.shape[0],1,9,9,2))
-	print("Sampled following number of classes in training minibatch: {}".format(np.sum(np.sum(np.sum(np.sum(minibatch_labels, axis=3),axis=2),axis=1),axis=0)))
+        minibatch_coords = coords[start:end,:,:,:]
+        minibatch_coords = np.reshape(minibatch_coords,(minibatch_coords.shape[0],3,9,9,1))
+        minibatch_coords_X = minibatch_coords[:,0,:,:,:]
+        minibatch_coords_Y = minibatch_coords[:,1,:,:,:]
+        minibatch_coords_Z = minibatch_coords[:,2,:,:,:]
+        minibatch_coords_X = np.reshape(minibatch_coords_X,(minibatch_coords_X.shape[0],1,9,9,1))
+        minibatch_coords_Y = np.reshape(minibatch_coords_X,(minibatch_coords_Y.shape[0],1,9,9,1))
+        minibatch_coords_Z = np.reshape(minibatch_coords_X,(minibatch_coords_Z.shape[0],1,9,9,1))
+        print("Sampled following number of classes in training minibatch: {}".format(np.sum(np.sum(np.sum(np.sum(minibatch_labels, axis=3),axis=2),axis=1),axis=0)))
         #freq = classesInSample(minibatch_labels, output_classes)
         #my_logger("Sampled following number of classes in training MINIBATCH: " + str(freq), logfile)
         #print(minibatch_labels.shape)
-	#print(minibatch_labels)
+        #print(minibatch_labels)
         #print(getClassProportions(freq))
-        model.fit(minibatch, minibatch_labels,  verbose = 0, callbacks = [history])
+        model.fit([minibatch, minibatch_coords_X,minibatch_coords_Y,minibatch_coords_Z], minibatch_labels,  verbose = 0, callbacks = [history])
         losses.extend(history.losses)
         metrics.extend(history.metrics)
         start = end
@@ -1087,7 +1183,7 @@ def plot_training(session,losses, metrics,val_performance,full_segm_DICE, smooth
         full_segm_DICE.plot(ax=axarr[n_plots-1],style='-o',color='green')
         axarr[n_plots-1].legend(loc='lower right')
         
-def validation_on_batch_quick(model, valbatch, size_minibatches_val, vallabels, output_classes, logfile):
+def validation_on_batch_quick(model, valbatch, size_minibatches_val, vallabels, valcoords, output_classes, logfile):
     print('\n Validation on Batch. Len: {}'.format(len(valbatch)))
     batch_performance = []
     start = 0
@@ -1100,7 +1196,15 @@ def validation_on_batch_quick(model, valbatch, size_minibatches_val, vallabels, 
         minivalbatch = valbatch[start:end,:,:,:,:]    
         minivalbatch_labels = vallabels[start:end,:,:,:]
         minivalbatch_labels = np.reshape(minivalbatch_labels,(minivalbatch_labels.shape[0],1,9,9,2))    
-    batch_performance.append(model.evaluate([minivalbatch], minivalbatch_labels, verbose=0))
+        minibatch_valcoord = valcoords[start:end,:,:]
+        minibatch_valcoord = np.reshape(minibatch_valcoord,(minibatch_valcoord.shape[0],3,9,9,1))  
+        minibatch_coords_X = minibatch_valcoord[:,0,:,:,:]
+        minibatch_coords_Y = minibatch_valcoord[:,1,:,:,:]
+        minibatch_coords_Z = minibatch_valcoord[:,2,:,:,:]
+        minibatch_coords_X = np.reshape(minibatch_coords_X,(minibatch_coords_X.shape[0],1,9,9,1))
+        minibatch_coords_Y = np.reshape(minibatch_coords_X,(minibatch_coords_Y.shape[0],1,9,9,1))
+        minibatch_coords_Z = np.reshape(minibatch_coords_X,(minibatch_coords_Z.shape[0],1,9,9,1))
+    batch_performance.append(model.evaluate([minivalbatch,minibatch_coords_X,minibatch_coords_Y,minibatch_coords_Z], minivalbatch_labels, verbose=0))
     val_performance = np.mean(batch_performance, 0)
     my_logger('Validation cost and accuracy ' + str(val_performance),logfile)        
     del valbatch
@@ -1144,7 +1248,7 @@ def weighted_generalized_dice_completeImages(img1,img2,penalty_MATRIX):
     # makes dice score now go in range [-1, 1]
     # Saldy it works in O(n^2), but still small enough to be fast.    
     
-    assert img1.shape == img2.shape, 'Images of different size!'
+    
     #assert (np.unique(img1) == np.unique(img2)).all(), 'Images have different classes!'
     classes = np.array(np.unique(img1), dtype='int8')   
     dice = []
@@ -1275,7 +1379,7 @@ def train_test_model(configFile, workingDir):
     elif cfg.load_model == True:
         from keras.models import load_model  
         if cfg.loss_function == 'Dice6':
-            from multiscale_CNN_TPM import dice_coef_multilabel6, dice_coef_multilabel0,dice_coef_multilabel1,dice_coef_multilabel2,dice_coef_multilabel3,dice_coef_multilabel4,dice_coef_multilabel5
+            from DM_MSKCC_Atrous_model import dice_coef_multilabel6, dice_coef_multilabel0,dice_coef_multilabel1,dice_coef_multilabel2,dice_coef_multilabel3,dice_coef_multilabel4,dice_coef_multilabel5
             my_custom_objects = {'dice_coef_multilabel6':dice_coef_multilabel6,
 				     'dice_coef_multilabel0':dice_coef_multilabel0,
 				     'dice_coef_multilabel1':dice_coef_multilabel1,
@@ -1285,7 +1389,7 @@ def train_test_model(configFile, workingDir):
 				     'dice_coef_multilabel5':dice_coef_multilabel5}
             #custom_metrics = [dice_coef_multilabel6,dice_coef_multilabel0,dice_coef_multilabel1,dice_coef_multilabel2,dice_coef_multilabel3,dice_coef_multilabel4,dice_coef_multilabel5]
         elif cfg.loss_function == 'wDice6':
-            from multiscale_CNN_TPM import w_dice_coef_multilabel6, dice_coef_multilabel0,dice_coef_multilabel1,dice_coef_multilabel2,dice_coef_multilabel3,dice_coef_multilabel4,dice_coef_multilabel5
+            from DM_MSKCC_Atrous_model import w_dice_coef_multilabel6, dice_coef_multilabel0,dice_coef_multilabel1,dice_coef_multilabel2,dice_coef_multilabel3,dice_coef_multilabel4,dice_coef_multilabel5
             my_custom_objects = {'w_dice_coef_multilabel6':w_dice_coef_multilabel6,
 				     'dice_coef_multilabel0':dice_coef_multilabel0,
 				     'dice_coef_multilabel1':dice_coef_multilabel1,
@@ -1294,12 +1398,12 @@ def train_test_model(configFile, workingDir):
 				     'dice_coef_multilabel4':dice_coef_multilabel4,
 				     'dice_coef_multilabel5':dice_coef_multilabel5}
         elif cfg.loss_function == 'Dice2':
-            from multiscale_CNN_TPM import Generalised_dice_coef_multilabel2, dice_coef_multilabel0,dice_coef_multilabel1
+            from DM_MSKCC_Atrous_model import Generalised_dice_coef_multilabel2, dice_coef_multilabel0,dice_coef_multilabel1
             my_custom_objects = {'Generalised_dice_coef_multilabel2':Generalised_dice_coef_multilabel2,
 				     'dice_coef_multilabel0':dice_coef_multilabel0,
 				     'dice_coef_multilabel1':dice_coef_multilabel1}
         elif cfg.loss_function == 'wDice2':
-            from multiscale_CNN_TPM import w_dice_coef_multilabel2, dice_coef_multilabel0,dice_coef_multilabel1
+            from DM_MSKCC_Atrous_model import w_dice_coef_multilabel2, dice_coef_multilabel0,dice_coef_multilabel1
             my_custom_objects = {'w_dice_coef_multilabel2':w_dice_coef_multilabel2,
 				     'dice_coef_multilabel0':dice_coef_multilabel0,
 				     'dice_coef_multilabel1':dice_coef_multilabel1}
@@ -1402,15 +1506,15 @@ def train_test_model(configFile, workingDir):
 	  		if np.max(full_segm_DICE) <= full_segm_DICE[-1]:
 				my_logger('###### SAVING TRAINED MODEL AT : ' + wd +'/Output/models/'+logfile[12:]+'.h5', logfile)
 				model.save(wd+'/models/'+logfile[12:]+'_epoch' + str(epoch+1) + '.h5')
-                        
+        model.save(wd+'/models/'+logfile[12:]+'_epoch' + str(epoch+1) + '.h5')                
         #################################################################################################
         #                                                                                               #
         #                               Training and Validation                                         #
         #                                                                                               #
         #################################################################################################
         if EARLY_STOP:
-	    my_logger('Convergence criterium met. Stopping training.',logfile)
-            break           
+           my_logger('Convergence criterium met. Stopping training.',logfile)
+           break           
                
         for i in range(0, cfg.num_iter):
             my_logger("                   Batch " + str(i+1) + "/" + str(cfg.num_iter) ,logfile)
@@ -1428,9 +1532,14 @@ def train_test_model(configFile, workingDir):
                     cfg.n_subjects_val = n_valSubjects
                     print('Using {} number of test subjects'.format(n_valSubjects))
                     
-                valbatch, vallabels = sampleTrainData(cfg.validationChannels, cfg.validationLabels, cfg.n_patches_val, cfg.n_subjects_val, \
+                valbatch, vallabels, valcoords = sampleTrainData(cfg.validationChannels, cfg.validationLabels, cfg.n_patches_val, cfg.n_subjects_val, \
                 cfg.dpatch, cfg.output_classes, cfg.samplingMethod_val, logfile)
-                val_performance.append(validation_on_batch_quick(model, valbatch, cfg.size_minibatches_val, vallabels, cfg.output_classes, logfile))
+                #print(valcoords.shape)
+                print(valcoords[0])
+                print(valcoords[0].dtype)
+                print(valcoords.shape)
+                print(vallabels.shape)
+                val_performance.append(validation_on_batch_quick(model, valbatch, cfg.size_minibatches_val, vallabels, valcoords, cfg.output_classes, logfile))
                 del valbatch, vallabels
           
             ####################### TRAINING ON BATCHES ##############################
@@ -1443,22 +1552,25 @@ def train_test_model(configFile, workingDir):
                 cfg.n_subjects = n_trainSubjects
                 print('Using {} number of test subjects'.format(n_trainSubjects))
          
-	    print('sampling {} patches'.format(cfg.n_patches))
-	    batch = 0
-	    labels = 0
-	    batch, labels = sampleTrainData(cfg.trainChannels,cfg.trainLabels, cfg.n_patches, cfg.n_subjects, cfg.dpatch, cfg.output_classes, cfg.samplingMethod_train, logfile) 
-	    assert not np.any(np.isnan(batch)), 'nan found in the input data!'   
-	    shuffleOrder = np.arange(batch.shape[0])
-	    np.random.shuffle(shuffleOrder)
-	    batch = batch[shuffleOrder]
-	    labels = labels[shuffleOrder]  
-	    #freq = classesInSample(labels, cfg.output_classes)
-	    #my_logger("Sampled following number of classes in training batch: " + str(freq), logfile)
-	    #print(getClassProportions(freq))
-	    #print('\n TRAINING BATCH')
-	    print(batch.shape)
-	    train_model_on_batch(model,batch,labels,cfg.size_minibatches,history,losses,metrics,l,logfile,cfg.output_classes)  
-	    del batch, labels
+            print('sampling {} patches'.format(cfg.n_patches))
+            batch = 0
+            labels = 0
+            batch, labels, coords = sampleTrainData(cfg.trainChannels,cfg.trainLabels, cfg.n_patches, cfg.n_subjects, cfg.dpatch, cfg.output_classes, cfg.samplingMethod_train, logfile) 
+            assert not np.any(np.isnan(batch)), 'nan found in the input data!'   
+            shuffleOrder = np.arange(batch.shape[0])
+            np.random.shuffle(shuffleOrder)
+            batch = batch[shuffleOrder]
+            labels = labels[shuffleOrder]  
+            coords = coords[shuffleOrder]
+            #freq = classesInSample(labels, cfg.output_classes)
+            #my_logger("Sampled following number of classes in training batch: " + str(freq), logfile)
+            #print(getClassProportions(freq))
+            print('TRAINING BATCH')
+            print(batch.shape)
+            print(labels.shape)
+            print(coords.shape)
+            train_model_on_batch(model,batch,labels, coords,cfg.size_minibatches,history,losses,metrics,l,logfile,cfg.output_classes)  
+            del batch, labels
   
         my_logger('Total training this epoch took ' + str(round(time.time()-t1,2)) + ' seconds',logfile)
 

@@ -42,7 +42,7 @@ test_subjects = 5
 # Models : 'CNN_TPM' , 'DeepMedic'
 model = 'DeepMedic'
 dpatch=[41,41,41]
-L2 = 0.00001
+L2 = 0.0001
 # Loss functions: 'Dice', 'wDice', 'Multinomial'
 loss_function = 'Dice2'
 
@@ -52,35 +52,35 @@ session =  path_to_model.split('/')[-3]
 
 num_channels = len(trainChannels)
 dropout = [0,0]  # dropout for last two fully connected layers
-learning_rate = 2e-04
+learning_rate = 2e-05
 optimizer_decay = 0
 
 ########################################## TRAIN PARAMETERS
-num_iter = 4
+num_iter = 10
 epochs = 50
 samplingMethod_train = 1
 samplingMethod_val = 1
 
-n_patches = 11300
-n_subjects = 113# Check that this is not larger than subjects in training file
-size_minibatches = 250 # Check that this value is not larger than the ammount of patches per subject per class
+n_patches = 7060
+n_subjects = 706# Check that this is not larger than subjects in training file
+size_minibatches = 2000 # Check that this value is not larger than the ammount of patches per subject per class
 
 
 quickmode = False # Train without validation. Full segmentation often but only report dice score (whole)
 n_patches_val = 1000
-n_subjects_val =  5# Check that this is not larger than subjects in validation file
+n_subjects_val =  50# Check that this is not larger than subjects in validation file
 size_minibatches_val = 1000 # Check that this value is not larger than the ammount of patches per subject per class
 
 
 ########################################### TEST PARAMETERS
 quick_segmentation = True
-n_fullSegmentations = 3
-#list_subjects_fullSegmentation = []
+n_fullSegmentations = 2
+list_subjects_fullSegmentation = []
 epochs_for_fullSegmentation = range(1,epochs)
-size_test_minibatches = 1000
+size_test_minibatches = 1500
 saveSegmentation = True
 
-threshold_EARLY_STOP = 0.01
+threshold_EARLY_STOP = 0.0001
 
 import numpy as np
 penalty_MATRIX = np.array([[ 1,  0],

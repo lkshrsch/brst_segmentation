@@ -28,6 +28,7 @@ from keras.layers.convolutional import Cropping3D
 from keras.layers import UpSampling3D
 from keras.layers import concatenate
 from keras.layers.advanced_activations import PReLU
+from keras.layers import LeakyReLU
 from keras.utils import print_summary
 from keras import regularizers
 from keras.optimizers import RMSprop
@@ -87,9 +88,9 @@ class DeepMedic():
         
         self.dpatch = dpatch[0]
         self.output_classes = output_classes
-	self.conv_features_downsample = [10,10,10,10,10,10,10,10,10]
-        self.conv_features = [50,50,50,50,50,50,50,50,50,70,70,70,70]#[20,20,20,20,30,30,40,40,60,50,50,50,50,50,50] #[50, 50, 50, 50, 50, 100, 100, 100]
-        self.fc_features = [100,100,150]
+	self.conv_features_downsample = [30,30,30,30,30,30,30,30,30]
+        self.conv_features = [50,50,50,50,50,50,50,70,70,70,70,100,100]#[20,20,20,20,30,30,40,40,60,50,50,50,50,50,50] #[50, 50, 50, 50, 50, 100, 100, 100]
+        self.fc_features = [100,100,100,150]
         self.d_factor = 2  # downsampling factor = stride in downsampling pathway
         self.num_channels = num_channels
         self.L2 = L2
@@ -125,8 +126,8 @@ class DeepMedic():
                                kernel_initializer=Orthogonal(),
                                kernel_regularizer=regularizers.l2(self.L2))(x1)
             x1        = BatchNormalization()(x1)
-            #x1        = Activation('relu')(x1)
-            x1        = PReLU()(x1)
+            x1        = Activation('relu')(x1)
+            #x1        = LeakyReLU()(x1)
             #x1        = BatchNormalization()(x1)
           
             
@@ -140,8 +141,8 @@ class DeepMedic():
                            kernel_initializer=Orthogonal(),
                            kernel_regularizer=regularizers.l2(self.L2))(mod1)
         x3        = BatchNormalization()(x3)
-            #x        = Activation('relu')(x)
-        x3        = PReLU()(x3)
+        x3        = Activation('relu')(x3)
+        #x3        = LeakyReLU()(x3)
 
 
 	for feature in (self.conv_features_downsample[0:9]):  
@@ -151,8 +152,8 @@ class DeepMedic():
                                kernel_initializer=Orthogonal(),
                                kernel_regularizer=regularizers.l2(self.L2))(x3)
             x3        = BatchNormalization()(x3)
-            #x        = Activation('relu')(x)
-            x3        = PReLU()(x3)
+            x3        = Activation('relu')(x3)
+            #x3        = LeakyReLU()(x3)
 
 
         #x2        = AveragePooling3D(pool_size=(self.d_factor,self.d_factor,self.d_factor), padding="same")(mod1)
@@ -166,8 +167,8 @@ class DeepMedic():
                                kernel_initializer=Orthogonal(),
                                kernel_regularizer=regularizers.l2(self.L2))(x2)
             x2        = BatchNormalization()(x2)
-            #x2        = Activation('relu')(x2)
-            x2        = PReLU()(x2)
+            x2        = Activation('relu')(x2)
+            #x2        = LeakyReLU()(x2)
             #x2        = BatchNormalization()(x2)
         
         #x2        = UpSampling3D(size=(9,9,9))(x2)
@@ -186,12 +187,13 @@ class DeepMedic():
                                kernel_regularizer=regularizers.l2(self.L2))(x)
             #x        = BatchNormalization()(x)
             #x        = Activation('relu')(x)
-            x        = PReLU()(x)
+            x        = LeakyReLU()(x)
         x        = BatchNormalization()(x)
         x        = Dropout(rate = self.dropout[0])(x)
        
-	coords = Input((1,9,9,3))
+        coords = Input((1,9,9,1))
 
+        x = concatenate([x, coords])    
  
 	for fc_filters in self.fc_features:
 	    x        = Conv3D(filters = fc_filters, 
@@ -200,9 +202,7 @@ class DeepMedic():
 		       kernel_initializer=Orthogonal(),
 		       kernel_regularizer=regularizers.l2(self.L2))(x)
     	    x        = BatchNormalization()(x)        
-	    x        = PReLU()(x)
-
-	x = concatenate([x, coords])
+	    x        = LeakyReLU()(x)
 
 	# Final Softmax Layer
         x        = Conv3D(filters = self.output_classes, 
@@ -214,7 +214,7 @@ class DeepMedic():
         x        = Activation(softmax)(x)
         #x        = Dense(units = fc_features[2], activation = 'softmax', name = 'softmax')(x)
         
-        model     = Model(inputs=mod1, outputs=x)
+        model     = Model(inputs=[mod1,coords], outputs=x)
         model.compile(loss=Generalised_dice_coef_multilabel2, optimizer=Adam(lr=self.learning_rate), metrics=[dice_coef_multilabel0,dice_coef_multilabel1])
                                   
         return model

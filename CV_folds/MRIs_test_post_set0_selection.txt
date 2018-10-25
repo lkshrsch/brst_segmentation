@@ -1,0 +1,5 @@
+/home/hirsch/Documents/projects/MSKCC/FINAL_TRAIN_DATA/Normalized/rMSKCC_16-328_1_06041_20030512_T1_post_rsc_stand_stand.nii
+/home/hirsch/Documents/projects/MSKCC/FINAL_TRAIN_DATA/Normalized/rMSKCC_16-328_1_10018_20061023_T1_post_rsc_stand_stand.nii
+/home/hirsch/Documents/projects/MSKCC/FINAL_TRAIN_DATA/Normalized/rMSKCC_16-328_1_05006_20030606_T1_post_rsc_stand_stand.nii
+/home/hirsch/Documents/projects/MSKCC/FINAL_TRAIN_DATA/Normalized/rMSKCC_16-328_1_06846_20130626_T1_post_rsc_stand_stand.nii
+/home/hirsch/Documents/projects/MSKCC/FINAL_TRAIN_DATA/Normalized/rMSKCC_16-328_1_03485_20060817_T1_post_rsc_stand_stand.nii

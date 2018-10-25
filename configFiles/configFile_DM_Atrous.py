@@ -33,7 +33,6 @@ validationLabels = testLabels
 output_classes = 2
 test_subjects = 5
     
-  
 #-------------------------------------------------------------------------------------------------------------
 
 # Parameters 
@@ -41,42 +40,41 @@ test_subjects = 5
 ######################################### MODEL PARAMETERS
 # Models : 'Atrous' , 'DeepMedic'
 model = 'Atrous'
-dpatch=[19,99,99]
+dpatch=[15,91,91]
 L2 = 0.0001
 # Loss functions: 'Dice', 'wDice', 'Multinomial'
 loss_function = 'Dice2'
 
 load_model = False
-path_to_model = '/home/hirsch/Documents/projects/brainSegmentation/DeepPriors/training_sessions/CNN_TPM_fullHeadSegmentation_configFile0_CNN_TPM_Dice_loss_2018-08-13_2311/models/HeadSegmentation_configFile0_CNN_TPM_Dice_loss_2018-08-13_2311.log_epoch5.h5'
+path_to_model = '/home/hirsch/Documents/projects/Breast_segmentation/DeepPriors_package/training_sessions/Atrous_fullHeadSegmentation_configFile_DM_Atrous_2018-10-22_1731/models/eadSegmentation_configFile_DM_Atrous_2018-10-22_1731.log_epoch2.h5'
 session =  path_to_model.split('/')[-3]
 
 num_channels = len(trainChannels)
 dropout = [0,0]  # dropout for last two fully connected layers
-learning_rate = 2e-04
+learning_rate = 2e-05
 optimizer_decay = 0
 
 ########################################## TRAIN PARAMETERS
-num_iter = 20
+num_iter = 10
 epochs = 50
 samplingMethod_train = 1
 samplingMethod_val = 1
 
-n_patches = 700
-n_subjects = 50# Check that this is not larger than subjects in training file
-size_minibatches = 7 # Check that this value is not larger than the ammount of patches per subject per class
-
+n_patches = 5000
+n_subjects = 1000
+size_minibatches = 12
 
 quickmode = False # Train without validation. Full segmentation often but only report dice score (whole)
 n_patches_val = 7
-n_subjects_val =  5# Check that this is not larger than subjects in validation file
-size_minibatches_val = 7 # Check that this value is not larger than the ammount of patches per subject per class
+n_subjects_val = 5
+size_minibatches_val = 7
 
 
 ########################################### TEST PARAMETERS
 quick_segmentation = True
 n_fullSegmentations = 3
-list_subjects_fullSegmentation = [4,5,6]
-epochs_for_fullSegmentation = range(2,epochs)
+list_subjects_fullSegmentation = []
+epochs_for_fullSegmentation = range(1,epochs)
 size_test_minibatches = 1500
 saveSegmentation = True
 

@@ -211,9 +211,9 @@ class DeepMedic():
         
         #   Fully convolutional variant
         
-        for feature in (self.conv_features[0:4]):  
+        for feature in (self.conv_features[0:2]):  
             x        = Conv3D(filters = feature, 
-                               kernel_size = (3,3,3), 
+                               kernel_size = (3,1,1), 
                                #kernel_initializer=he_normal(seed=seed),
                                kernel_initializer=Orthogonal(),
                                kernel_regularizer=regularizers.l2(self.L2))(x)
@@ -230,7 +230,13 @@ class DeepMedic():
                            kernel_regularizer=regularizers.l2(self.L2))(x)
         x        = Activation('relu')(x)
         
+        coords_x = Input((1,9,9,1))  
+        coords_y = Input((1,9,9,1))
+        coords_z = Input((1,9,9,1))
         
+        x = concatenate([x, coords_x, coords_y, coords_z])
+
+   
         for fc_filters in self.fc_features:
         	    x        = Conv3D(filters = fc_filters, 
         		       kernel_size = (1,1,1), 
@@ -240,6 +246,8 @@ class DeepMedic():
         	    x        = BatchNormalization()(x)        
         	    x        = Activation('relu')(x)
         
+ 
+        
         	# Final Softmax Layer
         x        = Conv3D(filters = self.output_classes, 
                    kernel_size = (1,1,1), 
@@ -247,7 +255,7 @@ class DeepMedic():
                    kernel_regularizer=regularizers.l2(self.L2))(x)
         x        = Activation(softmax)(x)
         
-        model     = Model(inputs=mod1, outputs=x)
+        model     = Model(inputs=[mod1,coords_x,coords_y,coords_z], outputs=x)
         model.compile(loss=Generalised_dice_coef_multilabel2, optimizer=Adam(lr=self.learning_rate), metrics=[dice_coef_multilabel0,dice_coef_multilabel1])
                                   
         return model

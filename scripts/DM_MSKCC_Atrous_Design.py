@@ -73,7 +73,7 @@ def dice_coef_multilabel2(y_true, y_pred):
 
 
 
-dpatch = 19,99,99
+dpatch = 15,91,91
 output_classes = 2
 conv_features_downsample = [10,10,10,10,10,10,10,10,10]
 conv_features = [50,50,50,50,50,50,50,50,50,70,70,70,70]#[20,20,20,20,30,30,40,40,60,50,50,50,50,50,50] #[50, 50, 50, 50, 50, 100, 100, 100]
@@ -184,9 +184,9 @@ x        = concatenate([x1,x3])
 
 #   Fully convolutional variant
 
-for feature in (conv_features[0:4]):  
+for feature in (conv_features[0:2]):  
     x        = Conv3D(filters = feature, 
-                       kernel_size = (3,3,3), 
+                       kernel_size = (3,1,1), 
                        #kernel_initializer=he_normal(seed=seed),
                        kernel_initializer=Orthogonal(),
                        kernel_regularizer=regularizers.l2(L2))(x)
@@ -214,9 +214,11 @@ for fc_filters in fc_features:
 	    x        = BatchNormalization()(x)        
 	    x        = Activation('relu')(x)
 
-coords = Input((1,9,9,3))
+coords_x = Input((1,9,9,1))  # or 3,9,9,1 ? 
+coords_y = Input((1,9,9,1))
+coords_z = Input((1,9,9,1))
 
-x = concatenate([x, coords])
+x = concatenate([x, coords_x, coords_y, coords_z])
 
 	# Final Softmax Layer
 x        = Conv3D(filters = output_classes, 
@@ -226,5 +228,5 @@ x        = Conv3D(filters = output_classes,
 x        = Activation(softmax)(x)
 
 
-model     = Model(inputs=[mod1,coords], outputs=x)
+model     = Model(inputs=[mod1,coords_x,coords_y,coords_z], outputs=x)
 model.summary()
