@@ -87,9 +87,9 @@ class DeepMedic():
         
         self.dpatch = dpatch
         self.output_classes = output_classes
-        self.conv_features_downsample = [10,10,10,10,10,10,10,10,10]
-        self.conv_features = [20,20,20,20,30,30,40,40,60,50,50,50,50,50,50] #[50,50,50,50,50,50,50,50,50,70,70,70,70]# #[50, 50, 50, 50, 50, 100, 100, 100]
-        self.fc_features = [100,100,150]
+        self.conv_features_downsample = [30,30,30,30,30,30,30,30,30]
+        self.conv_features = [30,30,30,30,50,50,50,50,50,50,70,70,70,70,70]# #[50, 50, 50, 50, 50, 100, 100, 100] #[20,20,20,20,30,30,40,40,60,50,50,50,50,50,50] 
+        self.fc_features = [150,150,150]
         self.d_factor = 2  # downsampling factor = stride in downsampling pathway
         self.num_channels = num_channels
         self.L2 = L2
@@ -234,7 +234,7 @@ class DeepMedic():
         coords_y = Input((1,9,9,1))
         coords_z = Input((1,9,9,1))
         
-        x = concatenate([x, coords_x, coords_y, coords_z])
+        #x = concatenate([x, coords_x, coords_y, coords_z])
 
    
         for fc_filters in self.fc_features:

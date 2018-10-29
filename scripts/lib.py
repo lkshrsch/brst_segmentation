@@ -78,7 +78,6 @@ def generateVoxelIndexes(subjectIndexes, shapes, patches_per_subject, dpatch, n_
                 # unform sampling
                 # central voxel of final 9x9x9 label cube
                 #voxelIndexesSubj.append((np.random.randint(4, shapes[i][0]-5),np.random.randint(4, shapes[i][1]-5),np.random.randint(4, shapes[i][2]-5)))
-
                 voxelIndexesSubj.append((np.random.randint(0+dpatch[0]/2, shapes[i][0]-(dpatch[0]/2)-1),np.random.randint(0+dpatch[1]/2, shapes[i][1]-(dpatch[1]/2)-1),np.random.randint(0+dpatch[2]/2, shapes[i][2]-(dpatch[2]/2)-1)))
             allVoxelIndexes.append(voxelIndexesSubj)            
         random.shuffle(allVoxelIndexes[i])
@@ -185,20 +184,25 @@ def getSubjectsToSample(channelList, subjectIndexes):
     return subjects
 
 def extractLabels(groundTruthChannel_list, subjectIndexes, voxelCoordinates, dpatch):
-    #print('extracting labels from ' + str(len(subjectIndexes))+ ' subjects.')
+    print('extracting labels from ' + str(len(subjectIndexes))+ ' subjects.')
     subjects = getSubjectsToSample(groundTruthChannel_list,subjectIndexes)
     labels = []
     #coordinates = []
     if (len(subjectIndexes) > 1):
         for i in xrange(0,len(voxelCoordinates)):
             subject = str(subjects[i])[:-1]
-	    #print('extracting labels from subject index [{}] with path : {}'.format(subjectIndexes[i],subject))
+            print('extracting labels from subject index [{}] with path : {}'.format(subjectIndexes[i],subject))
             proxy_label = nib.load(subject)
             label_data = np.array(proxy_label.get_data(),dtype='int8')
-            for j in xrange(0,len(voxelCoordinates[i])):     
+            for j in xrange(0,len(voxelCoordinates[i])):
+              if np.sum(label_data) == 0:
+                labels.append(np.zeros((9,9),dtype='int8'))
+              else:
                 D1,D2,D3 = voxelCoordinates[i][j]
-                #print('Extracting labels from \n subject {} with shape {} and coords {},{},{}'.format(subjects[i], label_data.shape ,D1,D2,D3))
+                print('Extracting labels from \n subject {} with shape {} and coords {},{},{}'.format(subjects[i], label_data.shape ,D1,D2,D3))
                 labels.append(label_data[D1,D2-4:D2+5,D3-4:D3+5])    # changed for breast data with sagittal 2D labels     
+                if len(labels[-1])==0:
+                  labels[-1] = np.zeros((9,9),dtype='int8')
             proxy_label.uncache()
             del label_data
         return labels
@@ -207,8 +211,11 @@ def extractLabels(groundTruthChannel_list, subjectIndexes, voxelCoordinates, dpa
         proxy_label = nib.load(subject)
         label_data = np.array(proxy_label.get_data(),dtype='int8')
         for i in xrange(0,len(voxelCoordinates[0])):
-            D1,D2,D3 = voxelCoordinates[0][i]
-            labels.append(label_data[D1,D2-4:D2+5,D3-4:D3+5])  # changed for breast data with sagittal 2D labels
+            if np.sum(label_data) == 0:
+              labels.append(np.zeros((9,9),dtype='int8'))
+            else:
+              D1,D2,D3 = voxelCoordinates[0][i]
+              labels.append(label_data[D1,D2-4:D2+5,D3-4:D3+5])  # changed for breast data with sagittal 2D labels
             #print("Extracted labels " + str(i))
         proxy_label.uncache()
         del label_data
@@ -288,19 +295,19 @@ def extractImagePatch(channel, subjectIndexes, patches, voxelCoordinates, dpatch
     vol = np.ones((n_patches,dpatch[0],dpatch[1],dpatch[2]),dtype='float32')
     k = 0
     if (len(subjectIndexes) > 1):
-	#print('\n MULTIPLE subjects')
+	print('\n MULTIPLE subjects')
 
 	# Loop over subjects
         for i in xrange(0,len(voxelCoordinates)):
             print('Extracting {} image patches for subject with index [{}] and channel {}'.format(len(voxelCoordinates[i]),subjectIndexes[i],str(subjects[i])[:-1]))    
             subject = str(subjects[i])[:-1]
-            #print('Subject with path: {}'.format(subject))
+            print('Subject with path: {}'.format(subject))
             proxy_img = nib.load(subject)            
             img_data = np.array(proxy_img.get_data(),dtype='float32')
 
 	       # Loop over voxelCoordinates tuples of subject i
             for j in xrange(0,len(voxelCoordinates[i])):   
-		    #print(voxelCoordinates[i][j] )     
+		    print(voxelCoordinates[i][j] )     
 		    D1,D2,D3 = voxelCoordinates[i][j]           
 		    if any([(D1 > img_data.shape[0]) , (D2 > img_data.shape[1]) , (D3 > img_data.shape[2])]):
 		        #print('Bad Coordinates')
@@ -309,11 +316,11 @@ def extractImagePatch(channel, subjectIndexes, patches, voxelCoordinates, dpatch
 		    if (voxelCoordinates[i][j][1] - (dpatch[1]/2) < 0 ) or (voxelCoordinates[i][j][1] + (dpatch[1]/2 + 1) > img_data.shape[1]) : myFlag = True
 		    if (voxelCoordinates[i][j][2] - (dpatch[2]/2) < 0 ) or (voxelCoordinates[i][j][2] + (dpatch[2]/2 + 1) > img_data.shape[2]) : myFlag = True
 		    if myFlag:
-		        #print('From subject: {}'.format(subjects[i]))
+		        print('From subject: {}'.format(subjects[i]))
 		        x_range = [x for x in range(D1-(dpatch[0]/2),D1+(dpatch[0]/2)+1) if (x>=0) and (x < img_data.shape[0]) ]                              
 		        y_range = [x for x in range(D2-(dpatch[1]/2),D2+(dpatch[1]/2)+1) if (x>=0) and (x < img_data.shape[1]) ]     
 		        z_range = [x for x in range(D3-(dpatch[2]/2),D3+(dpatch[2]/2)+1) if (x>=0) and (x < img_data.shape[2]) ]                   
-		        #print('Getting subpatch from \n{},\n{},\n{}'.format(x_range[-1],y_range[-1],z_range[-1]))
+		        print('Getting subpatch from \n{},\n{},\n{}'.format(x_range[-1],y_range[-1],z_range[-1]))
 		        subpatch = img_data[x_range[0]:x_range[len(x_range)-1]+1, y_range[0]:y_range[len(y_range)-1]+1, z_range[0]:z_range[len(z_range)-1]+1]
 		                            
 		        if x_range[0] == 0:
@@ -347,7 +354,7 @@ def extractImagePatch(channel, subjectIndexes, patches, voxelCoordinates, dpatch
         subject = str(subjects[0])[:-1]
         proxy_img = nib.load(subject)
         img_data = np.array(proxy_img.get_data(),dtype='float32')
-	# Loop over the voxel coordinates tuples.
+        # Loop over the voxel coordinates tuples.
         for i in xrange(0,len(voxelCoordinates[0])):          
             D1,D2,D3 = voxelCoordinates[0][i] 
             #print('Extracting image patch from {}'.format(voxelCoordinates[0][i] ) )
@@ -355,9 +362,11 @@ def extractImagePatch(channel, subjectIndexes, patches, voxelCoordinates, dpatch
             if (voxelCoordinates[0][i][1] - (dpatch[1]/2) < 0 ) or (voxelCoordinates[0][i][1] + (dpatch[1]/2 + 1) > img_data.shape[1]) : myFlag = True
             if (voxelCoordinates[0][i][2] - (dpatch[2]/2) < 0 ) or (voxelCoordinates[0][i][2] + (dpatch[2]/2 + 1) > img_data.shape[2]) : myFlag = True
             if myFlag:
+                #print('Border voxel')
                 x_range = [x for x in range(D1-(dpatch[0]/2),D1+(dpatch[0]/2)+1) if (x>=0) and (x < img_data.shape[0]) ]                              
                 y_range = [x for x in range(D2-(dpatch[1]/2),D2+(dpatch[1]/2)+1) if (x>=0) and (x < img_data.shape[1]) ]     
                 z_range = [x for x in range(D3-(dpatch[2]/2),D3+(dpatch[2]/2)+1) if (x>=0) and (x < img_data.shape[2]) ] 
+                #print('{}, {}, {}'.format(len(x_range),len(y_range),len(z_range)))
                 #print('Getting subpatch from \n{}:{},\n{}:{},\n{}:{}'.format(x_range[0],x_range[-1],y_range[0],y_range[-1],z_range[0],z_range[-1]))                 
                 subpatch = img_data[x_range[0]:x_range[len(x_range)-1]+1, y_range[0]:y_range[len(y_range)-1]+1, z_range[0]:z_range[len(z_range)-1]+1]		                    
                 if x_range[0] == 0:
@@ -396,7 +405,7 @@ def sampleTrainData(trainChannels, trainLabels, n_patches, n_subjects, dpatch, o
     labelsFile.close()    
     subjectIndexes = generateRandomIndexesSubjects(n_subjects, total_subjects) 
     print('Extracting patches from subjects index: {}'.format(subjectIndexes))
-    shapes = getSubjectShapes(subjectIndexes, n_patches, trainLabels)
+    shapes = getSubjectShapes(subjectIndexes, n_patches, trainChannels[0])
     voxelCoordinates = generateVoxelIndexes(subjectIndexes, shapes, patches_per_subject, dpatch, n_patches, trainLabels, samplingMethod, output_classes)    
     #print('Sampling Training Data: \n With {} patches'.format(len(voxelCoordinates)))
     #print(voxelCoordinates)
@@ -407,8 +416,12 @@ def sampleTrainData(trainChannels, trainLabels, n_patches, n_subjects, dpatch, o
         real_n_patches += len(voxelCoordinates[i])    
     patches = np.zeros((real_n_patches,dpatch[0],dpatch[1],dpatch[2],num_channels),dtype='float32')    
     for i in xrange(0,len(trainChannels)):
-        patches[:,:,:,:,i] = extractImagePatch(trainChannels[i], subjectIndexes, patches, voxelCoordinates, dpatch, debug=False)             
-    labels = np.array(extractLabels(trainLabels, subjectIndexes, voxelCoordinates, dpatch),dtype='int8')
+        patches[:,:,:,:,i] = extractImagePatch(trainChannels[i], subjectIndexes, patches, voxelCoordinates, dpatch, debug=False)           
+    labels_list = extractLabels(trainLabels, subjectIndexes, voxelCoordinates, dpatch)
+    print(type(labels_list))
+    print(len(labels_list))
+    print(labels_list)
+    labels = np.array(labels_list,dtype='int8')
     labels = np.array(to_categorical(labels.astype(int),output_classes),dtype='int8')
     if(samplingMethod == 2):
         patches = patches[0:len(labels)]  # when using equal sampling (samplingMethod 2), because some classes have very few voxels in a head, there are fewer patches as intended. Patches is initialized as the maximamum value, so needs to get cut to match labels.
@@ -416,7 +429,6 @@ def sampleTrainData(trainChannels, trainLabels, n_patches, n_subjects, dpatch, o
     end = time.time()
     my_logger("Finished extracting " + str(real_n_patches) + " patches, from "  + str(n_subjects) + " subjects and " + str(num_channels) + " channels. Timing: " + str(round(end-start,2)) + "s", logfile)
     return patches, labels, all_coordinates
-    
     
 def generateAllForegroundVoxels(groundTruthChannel_list, dpatch):
     "Gets called once, outside whole training iterations" 
@@ -700,14 +712,16 @@ def sampleTestData(testChannels, testLabels, subjectIndex, output_classes, dpatc
         shape = proxy_img.shape
         affine = proxy_img.affine
             
-        xend = shape[0]-5
-        yend = shape[1]-5
-        zend = shape[2]-5
+
+	# make borders larger, so it takes less to segment, and also because we know there are no interesting things on borders...
+        xend = shape[0]-5 # earlier : 5
+        yend = shape[1]-10 # earlier : 5
+        zend = shape[2]-10 # earlier : 5
     
         voxelCoordinates = []
-        for x in range(4,xend):
-            for y in range(4,yend,9):
-                for z in range(4,zend,9):
+        for x in range(4,xend):        
+            for y in range(8,yend,9):   # earlier 4
+                for z in range(8,zend,9):  # earlier 4
                     voxelCoordinates.append([x,y,z])
         labels = []
         all_coordinates = extractCoordinates(testLabels, subjectIndex, [voxelCoordinates])
@@ -726,13 +740,13 @@ def sampleTestData(testChannels, testLabels, subjectIndex, output_classes, dpatc
         affine = proxy_img.affine
             
         xend = shape[0]-5
-        yend = shape[1]-5
-        zend = shape[2]-5
+        yend = shape[1]-10
+        zend = shape[2]-10
     
         voxelCoordinates = []
         for x in range(4,xend):
-            for y in range(4,yend,9):
-                for z in range(4,zend,9):
+            for y in range(8,yend,9):
+                for z in range(8,zend,9):
                     voxelCoordinates.append([x,y,z])        
         labels = np.array(extractLabels(testLabels, subjectIndex, [voxelCoordinates], dpatch))
         all_coordinates = extractCoordinates(testLabels, subjectIndex, [voxelCoordinates])
@@ -834,10 +848,12 @@ def fullHeadSegmentation(wd, penalty_MATRIX, dice_compare, dsc, model, testChann
             subjectGTchannel = ch[subjectIndex[0]][:-1]
             GT = nib.load(subjectGTchannel)
             if img.shape != GT.shape:
-              print('Images of different size! \n{}, \n{}'.format(subjectGTchannel,testChannels[i]))
-              if np.sum(GT) == 0:
+              print('Images of different size! \n{}, \n{}'.format(subjectGTchannel,testChannels[0]))
+	      #print(np.sum(GT.get_data()))
+              if np.sum(GT.get_data()) == 0:
+		#print('creating dummy ground truth')
                 GT = np.zeros(shape=img.shape)
-                score = weighted_generalized_dice_completeImages(GT.get_data(), img.get_data(), penalty_MATRIX)
+                score = weighted_generalized_dice_completeImages(GT, img.get_data(), penalty_MATRIX)
                 #score = generalized_dice_completeImages(img.get_data(), GT.get_data())
                 dsc.append(score[0])
                 print(dsc[-1])
@@ -1250,7 +1266,7 @@ def weighted_generalized_dice_completeImages(img1,img2,penalty_MATRIX):
     
     
     #assert (np.unique(img1) == np.unique(img2)).all(), 'Images have different classes!'
-    classes = np.array(np.unique(img1), dtype='int8')   
+    classes = np.array(range(0,len(penalty_MATRIX)), dtype='int8')   
     dice = []
     
     for i in classes:
@@ -1532,8 +1548,7 @@ def train_test_model(configFile, workingDir):
                     cfg.n_subjects_val = n_valSubjects
                     print('Using {} number of test subjects'.format(n_valSubjects))
                     
-                valbatch, vallabels, valcoords = sampleTrainData(cfg.validationChannels, cfg.validationLabels, cfg.n_patches_val, cfg.n_subjects_val, \
-                cfg.dpatch, cfg.output_classes, cfg.samplingMethod_val, logfile)
+                valbatch, vallabels, valcoords = sampleTrainData(cfg.validationChannels, cfg.validationLabels, cfg.n_patches_val, cfg.n_subjects_val, cfg.dpatch, cfg.output_classes, cfg.samplingMethod_val, logfile)
                 #print(valcoords.shape)
                 print(valcoords[0])
                 print(valcoords[0].dtype)

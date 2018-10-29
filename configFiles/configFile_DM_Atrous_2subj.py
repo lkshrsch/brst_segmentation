@@ -21,8 +21,8 @@ dataset = 'fullHeadSegmentation'
     
 TPM_channel = ''
     
-trainChannels = ['/CV_folds/post_3subj.txt'] #,'/CV_folds/MRIs_train_pre_set0.txt']
-trainLabels = '/CV_folds/labels_3subj.txt'
+trainChannels = ['/CV_folds/mri_1subj.txt'] #,'/CV_folds/MRIs_train_pre_set0.txt']
+trainLabels = '/CV_folds/label_1subj.txt'
     
 testChannels = trainChannels # ['/CV_folds/MRIs_test_post_set0.txt'] #,'/CV_folds/MRIs_test_pre_set0.txt']
 testLabels = trainLabels #'/CV_folds/labels_test_set0.txt'
@@ -31,7 +31,7 @@ validationChannels = testChannels
 validationLabels = testLabels
     
 output_classes = 2
-test_subjects = 1
+test_subjects = 2
     
   
 #-------------------------------------------------------------------------------------------------------------
@@ -41,7 +41,7 @@ test_subjects = 1
 ######################################### MODEL PARAMETERS
 # Models : 'Atrous' , 'DeepMedic'
 model = 'Atrous'
-dpatch=[19,99,99]
+dpatch=[15,91,91]
 L2 = 0.00001
 # Loss functions: 'Dice', 'wDice', 'Multinomial'
 loss_function = 'Dice2'
@@ -52,7 +52,7 @@ session =  path_to_model.split('/')[-3]
 
 num_channels = len(trainChannels)
 dropout = [0,0]  # dropout for last two fully connected layers
-learning_rate = 2e-05
+learning_rate = 2e-04
 optimizer_decay = 0
 
 ########################################## TRAIN PARAMETERS
@@ -61,13 +61,13 @@ epochs = 50
 samplingMethod_train = 1
 samplingMethod_val = 1
 
-n_patches = 800
-n_subjects = 50# Check that this is not larger than subjects in training file
-size_minibatches = 4 # Check that this value is not larger than the ammount of patches per subject per class
+n_patches = 700
+n_subjects = 2# Check that this is not larger than subjects in training file
+size_minibatches = 7 # Check that this value is not larger than the ammount of patches per subject per class
 
 
 quickmode = False # Train without validation. Full segmentation often but only report dice score (whole)
-n_patches_val = 200
+n_patches_val = 5
 n_subjects_val =  2# Check that this is not larger than subjects in validation file
 size_minibatches_val = 5 # Check that this value is not larger than the ammount of patches per subject per class
 
@@ -75,7 +75,7 @@ size_minibatches_val = 5 # Check that this value is not larger than the ammount 
 ########################################### TEST PARAMETERS
 quick_segmentation = True
 n_fullSegmentations = 2
-#list_subjects_fullSegmentation = []
+list_subjects_fullSegmentation = []
 epochs_for_fullSegmentation = range(1,epochs)
 size_test_minibatches = 1500
 saveSegmentation = True

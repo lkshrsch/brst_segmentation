@@ -55,25 +55,25 @@ learning_rate = 2e-05
 optimizer_decay = 0
 
 ########################################## TRAIN PARAMETERS
-num_iter = 10
+num_iter = 15
 epochs = 50
 samplingMethod_train = 1
 samplingMethod_val = 1
 
-n_patches = 5000
-n_subjects = 1000
+n_patches = 3500
+n_subjects = 700
 size_minibatches = 12
 
 quickmode = False # Train without validation. Full segmentation often but only report dice score (whole)
 n_patches_val = 7
-n_subjects_val = 5
+n_subjects_val = 7
 size_minibatches_val = 7
 
 
 ########################################### TEST PARAMETERS
 quick_segmentation = True
-n_fullSegmentations = 3
-list_subjects_fullSegmentation = []
+n_fullSegmentations = 2
+list_subjects_fullSegmentation = [1,2]
 epochs_for_fullSegmentation = range(1,epochs)
 size_test_minibatches = 1500
 saveSegmentation = True

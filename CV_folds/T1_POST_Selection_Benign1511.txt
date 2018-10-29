@@ -1022,8 +1022,6 @@
 /home/hirsch/Documents/projects/MSKCC/FINAL_TRAIN_DATA/800Benign/r20100311_085635s007a1001_first_ras_right_stand.nii
 /home/hirsch/Documents/projects/MSKCC/FINAL_TRAIN_DATA/800Benign/r20100312_103232s009a1001_first_ras_left_stand.nii
 /home/hirsch/Documents/projects/MSKCC/FINAL_TRAIN_DATA/800Benign/r20100312_103232s009a1001_first_ras_right_stand.nii
-/home/hirsch/Documents/projects/MSKCC/FINAL_TRAIN_DATA/800Benign/r20100312_112807s007a1001_ras_left_stand.nii
-/home/hirsch/Documents/projects/MSKCC/FINAL_TRAIN_DATA/800Benign/r20100312_112807s007a1001_ras_right_stand.nii
 /home/hirsch/Documents/projects/MSKCC/FINAL_TRAIN_DATA/800Benign/r20100314_120915s008a1001_first_ras_left_stand.nii
 /home/hirsch/Documents/projects/MSKCC/FINAL_TRAIN_DATA/800Benign/r20100314_120915s008a1001_first_ras_right_stand.nii
 /home/hirsch/Documents/projects/MSKCC/FINAL_TRAIN_DATA/800Benign/r20100316_151301s008a1001_first_ras_left_stand.nii
@@ -1096,8 +1094,6 @@
 /home/hirsch/Documents/projects/MSKCC/FINAL_TRAIN_DATA/800Benign/r20100510_172529s008a1001_first_ras_right_stand.nii
 /home/hirsch/Documents/projects/MSKCC/FINAL_TRAIN_DATA/800Benign/r20100512_090252s007a1001_first_ras_left_stand.nii
 /home/hirsch/Documents/projects/MSKCC/FINAL_TRAIN_DATA/800Benign/r20100512_090252s007a1001_first_ras_right_stand.nii
-/home/hirsch/Documents/projects/MSKCC/FINAL_TRAIN_DATA/800Benign/r20100513_103944s009a1001_ras_left_stand.nii
-/home/hirsch/Documents/projects/MSKCC/FINAL_TRAIN_DATA/800Benign/r20100513_103944s009a1001_ras_right_stand.nii
 /home/hirsch/Documents/projects/MSKCC/FINAL_TRAIN_DATA/800Benign/r20100514_123935s009a1001_first_ras_left_stand.nii
 /home/hirsch/Documents/projects/MSKCC/FINAL_TRAIN_DATA/800Benign/r20100514_123935s009a1001_first_ras_right_stand.nii
 /home/hirsch/Documents/projects/MSKCC/FINAL_TRAIN_DATA/800Benign/r20100514_145747s008a1001_first_ras_left_stand.nii
