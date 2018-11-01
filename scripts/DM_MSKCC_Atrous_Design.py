@@ -73,7 +73,7 @@ def dice_coef_multilabel2(y_true, y_pred):
 
 
 
-dpatch = 15,91,91
+dpatch = 13,75,75
 output_classes = 2
 conv_features_downsample = [10,10,10,10,10,10,10,10,10]
 conv_features = [50,50,50,50,50,50,50,50,50,70,70,70,70]#[20,20,20,20,30,30,40,40,60,50,50,50,50,50,50] #[50, 50, 50, 50, 50, 100, 100, 100]
@@ -151,22 +151,13 @@ x3        = Conv3D(filters = 50,
 x3        = BatchNormalization()(x3)
 x3        = Activation('relu')(x3)
 
-x3        = Conv3D(filters = 50, 
-                   kernel_size = (3,3,3), 
-                   dilation_rate = (1,10,10),
-                   padding = 'valid',
-                   #kernel_initializer=he_normal(seed=seed),
-                   kernel_initializer=Orthogonal(),
-                   kernel_regularizer=regularizers.l2(L2))(x3)
-x3        = BatchNormalization()(x3)
-x3        = Activation('relu')(x3)
 
 
 #############   High res pathway   ##################  
 
-x1        = Cropping3D(cropping = ((0,0),(30,30),(30,30)), input_shape=(dpatch[0],dpatch[1],dpatch[2],  num_channels))(mod1)
+x1        = Cropping3D(cropping = ((0,0),(22,22),(22,22)), input_shape=(dpatch[0],dpatch[1],dpatch[2],  num_channels))(mod1)
 
-for feature in conv_features[0:10]:  
+for feature in conv_features[0:8]:  
     x1        = Conv3D(filters = feature, 
                        kernel_size = (2,3,3), 
                        #kernel_initializer=he_normal(seed=seed),
@@ -186,7 +177,7 @@ x        = concatenate([x1,x3])
 
 for feature in (conv_features[0:2]):  
     x        = Conv3D(filters = feature, 
-                       kernel_size = (3,1,1), 
+                       kernel_size = (3,3,3), 
                        #kernel_initializer=he_normal(seed=seed),
                        kernel_initializer=Orthogonal(),
                        kernel_regularizer=regularizers.l2(L2))(x)
@@ -214,11 +205,11 @@ for fc_filters in fc_features:
 	    x        = BatchNormalization()(x)        
 	    x        = Activation('relu')(x)
 
-coords_x = Input((1,9,9,1))  # or 3,9,9,1 ? 
+#coords_x = Input((1,9,9,1))  # or 3,9,9,1 ? 
 coords_y = Input((1,9,9,1))
 coords_z = Input((1,9,9,1))
 
-x = concatenate([x, coords_x, coords_y, coords_z])
+x = concatenate([x, coords_y, coords_z])
 
 	# Final Softmax Layer
 x        = Conv3D(filters = output_classes, 
@@ -228,5 +219,5 @@ x        = Conv3D(filters = output_classes,
 x        = Activation(softmax)(x)
 
 
-model     = Model(inputs=[mod1,coords_x,coords_y,coords_z], outputs=x)
+model     = Model(inputs=[mod1,coords_y,coords_z], outputs=x)
 model.summary()

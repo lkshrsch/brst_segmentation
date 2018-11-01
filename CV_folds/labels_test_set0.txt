@@ -1,8 +1,3 @@
-/home/hirsch/Documents/projects/MSKCC/FINAL_TRAIN_DATA/LABELS/rMSKCC_16-328_1_10484_20070220_label.nii
-/home/hirsch/Documents/projects/MSKCC/FINAL_TRAIN_DATA/LABELS/rMSKCC_16-328_1_00114_20120425_label.nii
-/home/hirsch/Documents/projects/MSKCC/FINAL_TRAIN_DATA/LABEL_BENIGN.nii
-/home/hirsch/Documents/projects/MSKCC/FINAL_TRAIN_DATA/LABELS/rMSKCC_16-328_1_04248_20111102_label.nii
-/home/hirsch/Documents/projects/MSKCC/FINAL_TRAIN_DATA/LABEL_BENIGN.nii
 /home/hirsch/Documents/projects/MSKCC/FINAL_TRAIN_DATA/LABEL_BENIGN.nii
 /home/hirsch/Documents/projects/MSKCC/FINAL_TRAIN_DATA/LABEL_BENIGN.nii
 /home/hirsch/Documents/projects/MSKCC/FINAL_TRAIN_DATA/LABELS/rMSKCC_16-328_1_13216_20101101_label.nii

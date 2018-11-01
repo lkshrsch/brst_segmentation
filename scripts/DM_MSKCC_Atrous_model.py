@@ -35,6 +35,7 @@ import keras.backend as K
 from keras.optimizers import Adam
 import numpy as np
 from keras.activations import softmax
+from keras.layers import LeakyReLU
 from keras.engine import InputLayer
 
 #------------------------------------------------------------------------------------------
@@ -88,8 +89,8 @@ class DeepMedic():
         self.dpatch = dpatch
         self.output_classes = output_classes
         self.conv_features_downsample = [30,30,30,30,30,30,30,30,30]
-        self.conv_features = [30,30,30,30,50,50,50,50,50,50,70,70,70,70,70]# #[50, 50, 50, 50, 50, 100, 100, 100] #[20,20,20,20,30,30,40,40,60,50,50,50,50,50,50] 
-        self.fc_features = [150,150,150]
+        self.conv_features = [30,30,30,30,50,50,50,50,50,50,100,100,100]# #[50, 50, 50, 50, 50, 100, 100, 100] #[20,20,20,20,30,30,40,40,60,50,50,50,50,50,50] 
+        self.fc_features = [150,150,200]
         self.d_factor = 2  # downsampling factor = stride in downsampling pathway
         self.num_channels = num_channels
         self.L2 = L2
@@ -126,8 +127,8 @@ class DeepMedic():
                            kernel_initializer=Orthogonal(),
                            kernel_regularizer=regularizers.l2(self.L2))(mod1)
         x3        = BatchNormalization()(x3)
-        x3        = Activation('relu')(x3)
-        #x3        = PReLU()(x3)
+        #x3        = Activation('relu')(x3)
+        x3        = LeakyReLU()(x3)
         
         x3        = Conv3D(filters = 30, 
                            kernel_size = (3,3,3), 
@@ -136,8 +137,8 @@ class DeepMedic():
                            kernel_initializer=Orthogonal(),
                            kernel_regularizer=regularizers.l2(self.L2))(x3)
         x3        = BatchNormalization()(x3)
-        x3        = Activation('relu')(x3)
-        
+        #x3        = Activation('relu')(x3)
+        x3        = LeakyReLU()(x3)
         # -------------------   Dilation Pyramid
         
         x3        = Conv3D(filters = 40, 
@@ -148,8 +149,9 @@ class DeepMedic():
                            kernel_initializer=Orthogonal(),
                            kernel_regularizer=regularizers.l2(self.L2))(x3)
         x3        = BatchNormalization()(x3)
-        x3        = Activation('relu')(x3)
-        
+        #x3        = Activation('relu')(x3)
+	x3        = LeakyReLU()(x3)        
+
         x3        = Conv3D(filters = 40, 
                            kernel_size = (3,3,3), 
                            dilation_rate = (1,4,4),
@@ -158,7 +160,8 @@ class DeepMedic():
                            kernel_initializer=Orthogonal(),
                            kernel_regularizer=regularizers.l2(self.L2))(x3)
         x3        = BatchNormalization()(x3)
-        x3        = Activation('relu')(x3)
+        #x3        = Activation('relu')(x3)
+	x3        = LeakyReLU()(x3)       
         
         x3        = Conv3D(filters = 50, 
                            kernel_size = (3,3,3), 
@@ -168,7 +171,8 @@ class DeepMedic():
                            kernel_initializer=Orthogonal(),
                            kernel_regularizer=regularizers.l2(self.L2))(x3)
         x3        = BatchNormalization()(x3)
-        x3        = Activation('relu')(x3)
+        #x3        = Activation('relu')(x3)
+	x3        = LeakyReLU()(x3)       
         
         x3        = Conv3D(filters = 50, 
                            kernel_size = (3,3,3), 
@@ -178,31 +182,24 @@ class DeepMedic():
                            kernel_initializer=Orthogonal(),
                            kernel_regularizer=regularizers.l2(self.L2))(x3)
         x3        = BatchNormalization()(x3)
-        x3        = Activation('relu')(x3)
+        #x3        = Activation('relu')(x3)
+	x3        = LeakyReLU()(x3)       
         
-        x3        = Conv3D(filters = 50, 
-                           kernel_size = (3,3,3), 
-                           dilation_rate = (1,10,10),
-                           padding = 'valid',
-                           #kernel_initializer=he_normal(seed=seed),
-                           kernel_initializer=Orthogonal(),
-                           kernel_regularizer=regularizers.l2(self.L2))(x3)
-        x3        = BatchNormalization()(x3)
-        x3        = Activation('relu')(x3)
-        
+       
         
         #############   High res pathway   ##################  
         
-        x1        = Cropping3D(cropping = ((0,0),(30,30),(30,30)), input_shape=(self.dpatch[0],self.dpatch[1],self.dpatch[2],  self.num_channels))(mod1)
+        x1        = Cropping3D(cropping = ((0,0),(22,22),(22,22)), input_shape=(self.dpatch[0],self.dpatch[1],self.dpatch[2],  self.num_channels))(mod1)
         
-        for feature in self.conv_features[0:10]:  
+        for feature in self.conv_features[0:8]:  
             x1        = Conv3D(filters = feature, 
                                kernel_size = (2,3,3), 
                                #kernel_initializer=he_normal(seed=seed),
                                kernel_initializer=Orthogonal(),
                                kernel_regularizer=regularizers.l2(self.L2))(x1)
             x1        = BatchNormalization()(x1)
-            x1        = Activation('relu')(x1)
+            #x1        = Activation('relu')(x1)
+	    x1        = LeakyReLU()(x1)       
         
         
         #############   Fully connected layers   ################## 
@@ -211,30 +208,32 @@ class DeepMedic():
         
         #   Fully convolutional variant
         
-        for feature in (self.conv_features[0:2]):  
+        for feature in (self.conv_features[10:12]):  
             x        = Conv3D(filters = feature, 
-                               kernel_size = (3,1,1), 
+                               kernel_size = (3,3,3), 
                                #kernel_initializer=he_normal(seed=seed),
                                kernel_initializer=Orthogonal(),
                                kernel_regularizer=regularizers.l2(self.L2))(x)
             x        = BatchNormalization()(x)
-            x        = Activation('relu')(x)
-            #x        = PReLU()(x)
-        x        = BatchNormalization()(x)
-        x        = Dropout(rate = self.dropout[0])(x)
+            #x        = Activation('relu')(x)
+            x        = LeakyReLU()(x)
+
+        #x        = BatchNormalization()(x)
+        #x        = Dropout(rate = self.dropout[0])(x)
         
         
-        x        = Conv3D(filters = 80, 
+        x        = Conv3D(filters = 100, 
                            kernel_size = (1,3,3), 
                            kernel_initializer=Orthogonal(),
                            kernel_regularizer=regularizers.l2(self.L2))(x)
-        x        = Activation('relu')(x)
-        
-        coords_x = Input((1,9,9,1))  
+        #x        = Activation('relu')(x)
+        x        = LeakyReLU()(x)
+        #coords_x = Input((1,9,9,1))  
+
         coords_y = Input((1,9,9,1))
         coords_z = Input((1,9,9,1))
         
-        #x = concatenate([x, coords_x, coords_y, coords_z])
+        #x = concatenate([x, coords_y, coords_z])
 
    
         for fc_filters in self.fc_features:
@@ -244,8 +243,8 @@ class DeepMedic():
         		       kernel_initializer=Orthogonal(),
         		       kernel_regularizer=regularizers.l2(self.L2))(x)
         	    x        = BatchNormalization()(x)        
-        	    x        = Activation('relu')(x)
-        
+        	    #x        = Activation('relu')(x)
+        	    x        = LeakyReLU()(x)
  
         
         	# Final Softmax Layer
@@ -255,7 +254,7 @@ class DeepMedic():
                    kernel_regularizer=regularizers.l2(self.L2))(x)
         x        = Activation(softmax)(x)
         
-        model     = Model(inputs=[mod1,coords_x,coords_y,coords_z], outputs=x)
+        model     = Model(inputs=[mod1,coords_y,coords_z], outputs=x)
         model.compile(loss=Generalised_dice_coef_multilabel2, optimizer=Adam(lr=self.learning_rate), metrics=[dice_coef_multilabel0,dice_coef_multilabel1])
                                   
         return model

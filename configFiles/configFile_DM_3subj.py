@@ -21,8 +21,8 @@ dataset = 'fullHeadSegmentation'
     
 TPM_channel = ''
     
-trainChannels = ['/CV_folds/post_3subj.txt']
-trainLabels = '/CV_folds/labels_3subj.txt'
+trainChannels = ['/CV_folds/mri_1subj.txt']
+trainLabels = '/CV_folds/label_1subj.txt'
     
 
 testChannels = trainChannels #['/CV_folds/post_1subj.txt','/CV_folds/pre_1subj.txt']

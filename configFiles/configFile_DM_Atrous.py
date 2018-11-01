@@ -40,7 +40,7 @@ test_subjects = 5
 ######################################### MODEL PARAMETERS
 # Models : 'Atrous' , 'DeepMedic'
 model = 'Atrous'
-dpatch=[15,91,91]
+dpatch=[13,75,75]
 L2 = 0.0001
 # Loss functions: 'Dice', 'wDice', 'Multinomial'
 loss_function = 'Dice2'
@@ -51,23 +51,23 @@ session =  path_to_model.split('/')[-3]
 
 num_channels = len(trainChannels)
 dropout = [0,0]  # dropout for last two fully connected layers
-learning_rate = 2e-05
+learning_rate = 1e-05
 optimizer_decay = 0
 
 ########################################## TRAIN PARAMETERS
-num_iter = 15
+num_iter = 20
 epochs = 50
 samplingMethod_train = 1
 samplingMethod_val = 1
 
 n_patches = 3500
-n_subjects = 700
+n_subjects = 1490
 size_minibatches = 12
 
 quickmode = False # Train without validation. Full segmentation often but only report dice score (whole)
-n_patches_val = 7
+n_patches_val = 50
 n_subjects_val = 7
-size_minibatches_val = 7
+size_minibatches_val = 12
 
 
 ########################################### TEST PARAMETERS
